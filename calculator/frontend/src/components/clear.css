@@ -1,0 +1,12 @@
+.clear {
+    display: flex;
+    flex: 1;
+    height: 4em;
+    align-items: center;
+    justify-content: center;
+    font-weight: lighter;
+    font-size: 1.4em;
+    outline: 1px solid #FA8072;
+    height: 4em;
+    background-color: rgb(138, 187, 105);
+  }
