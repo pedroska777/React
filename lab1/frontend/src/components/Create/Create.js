@@ -19,13 +19,6 @@ class Create extends Component {
       course_term: "",
       redirectError: true
     };
-
-    //Bind the handlers to this class
-    /*     this.BookIdChangeHandler = this.BookIdChangeHandler.bind(this);
-    this.TitleChangeHandler = this.TitleChangeHandler.bind(this);
-    this.AuthorChangeHandler = this.AuthorChangeHandler.bind(this);
-
-    this.createBook = this.createBook.bind(this); */
   }
 
   changeHandler = e => {

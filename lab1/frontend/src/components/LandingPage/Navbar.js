@@ -40,6 +40,11 @@ class Navbar extends Component {
       navLogin = (
         <ul class="nav navbar-nav navbar-right">
           <li>
+            <Link to="/signup">
+              <span class="glyphicon glyphicon-log-in" /> Sing up
+            </Link>
+          </li>
+          <li>
             <Link to="/login">
               <span class="glyphicon glyphicon-log-in" /> Login
             </Link>
@@ -60,9 +65,6 @@ class Navbar extends Component {
           <li>
             <Link to="/search">Search</Link>
           </li>
-          <li>
-            <Link to="/assignment">Assignments</Link>
-          </li>
         </ul>
       );
     } else if (cookie.load("Role") === "faculty") {
@@ -73,9 +75,6 @@ class Navbar extends Component {
           </li>
           <li>
             <Link to="/create">Create a Course</Link>
-          </li>
-          <li>
-            <Link to="/createassignment">Create Assignment</Link>
           </li>
         </ul>
       );

@@ -3,6 +3,8 @@ import "../../App.css";
 import axios from "axios";
 import cookie from "react-cookies";
 import { Redirect } from "react-router";
+import { Link } from "react-router-dom";
+
 import Course from "../Course/course";
 
 class Home extends Component {
@@ -10,41 +12,39 @@ class Home extends Component {
     super(props);
     this.state = {
       role: "",
-      books: [],
-      user_registration_data: [],
-      registration_data: [],
-      homeAnswer: [],
+      courseID: "",
+      instructor: "",
+      allData: [],
+      waitlisted: 0,
       selectedCourse: undefined
     };
   }
-  //get the books data from backend
-  componentDidMount() {
-    console.log("inside didmount home up1");
-    axios.get("http://localhost:3001/home").then(response => {
-      //update the state with the response data
-      console.log("inside didmount home  down1");
-      this.setState({
-        books: response.data
-      });
-      console.log("All registration classes:", this.state.registration_data);
-    });
 
-    axios.get("http://localhost:3001/registration").then(response => {
-      //update the state with the response data
-      console.log("inside didmount home down2");
-      this.setState({
-        user_registration_data: response.data
+  componentDidMount() {
+    if (cookie.load("Role") === "student") {
+      axios.get("http://localhost:3001/registration").then(response => {
+        //update the state with the response data
+        console.log("inside didmount home down2");
+        this.setState({
+          allData: response.data,
+          instructor: response.data.courses_instructor,
+          courseID: response.data.courses_courseID,
+          waitlisted: response.data.waitlisted
+        });
+        console.log("All Registration:", this.state.allData);
       });
-      console.log("user classes:", this.state.user_registration_data);
-    });
-    axios.get("http://localhost:3001/registrationAll").then(response => {
-      //update the state with the response data
-      console.log("inside didmount home down3");
-      this.setState({
-        registration_data: response.data
+    } else {
+      axios.get("http://localhost:3001/courses").then(response => {
+        //update the state with the response data
+        console.log("inside didmount home down3");
+        this.setState({
+          allData: response.data,
+          instructor: response.data.instructor,
+          courseID: response.data.courseID
+        });
+        console.log("All classes:", this.state.allData);
       });
-      console.log("All registration classes:", this.state.registration_data);
-    });
+    }
   }
 
   handlegotoCourse = course => {
@@ -55,48 +55,51 @@ class Home extends Component {
 
   render() {
     var courseAns = [];
-    courseAns = this.state.user_registration_data.map(course => {
+    let courseID = "";
+    let instructor = "";
+    let waitlisted = 0;
+
+    courseAns = this.state.allData.map(course => {
       console.log("course=", course, typeof course);
-
-      var hasClass = false;
-      this.state.user_registration_data.map(element => {
-        if (
-          element.courses_courseID == course.courseID &&
-          element.courses_instructor == course.instructor
-        ) {
-          hasClass = true;
-        }
-      });
-      console.log("hasclass===", hasClass);
-
-      let button;
-      if (this.state.user_registration_data.length > 0) {
-        button = (
-          <button onClick={() => this.handlegotoCourse(course)}>Go To</button>
-        );
+      if (cookie.load("Role") === "student") {
+        courseID = course.courses_courseID;
+        instructor = course.courses_instructor;
+        waitlisted = course.waitlisted;
+      } else {
+        courseID = course.courseID;
+        instructor = course.instructor;
+        waitlisted = 0;
       }
 
-      return (
-        <tr>
-          <td>{course.courses_courseID}</td>
-          <td>{course.courses_instructor}</td>
-          <td>{button}</td>
-        </tr>
+      let button = (
+        <Link to={`/courseHome/${courseID}`}>GO</Link>
+        // <button onClick={() => this.handlegotoCourse(course)}>Go To</button>
       );
+      let courseList = null;
+      if (waitlisted === 0) {
+        courseList = (
+          <tr>
+            <td>{courseID}</td>
+            <td>{instructor}</td>
+            <td>{button}</td>
+          </tr>
+        );
+      } else {
+        courseList = null;
+      }
+      console.log("courseList:", courseList);
+
+      return courseList;
     });
+    console.log("courseAns:", courseAns);
 
     let redirectVar = null;
     if (!cookie.load("cookie")) {
       redirectVar = <Redirect to="/login" />;
     }
-    if (this.state.selectedCourse) {
+    /*     if (this.state.selectedCourse) {
       return <Course course={this.state.selectedCourse} />;
-    }
-
-    // if this.state.select_course
-    // return (
-    // <Course course=this.state.selected_course />
-    //)
+    } */
 
     return (
       <div>
@@ -108,9 +111,8 @@ class Home extends Component {
             <thead>
               <tr>
                 <th>Course ID</th>
-                <th>Title</th>
-                <th>Course Room</th>
                 <th>Instructor</th>
+                <th />
               </tr>
             </thead>
             <tbody>

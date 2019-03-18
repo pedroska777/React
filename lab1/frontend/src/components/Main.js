@@ -10,6 +10,8 @@ import Error from "./Error/error";
 import Profile from "./Profile/profile";
 import Search from "./Search/search";
 import Sidebar from "./LandingPage/Sidebar";
+import Course from "./Course/course";
+import EnrolledList from "./EnrolledList/enrolledList";
 
 //Create a Main Component
 class Main extends Component {
@@ -27,6 +29,8 @@ class Main extends Component {
         <Route path="/error" component={Error} />
         <Route path="/profile" component={Profile} />
         <Route path="/search" component={Search} />
+        <Route path="/courseHome/:courseID" exact component={Course} />
+        <Route path="/enrolledList/:courseID" exact component={EnrolledList} />
       </div>
     );
   }
