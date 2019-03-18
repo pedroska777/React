@@ -84,19 +84,6 @@ app.post("/download/:file(*)", (req, res) => {
   res.end(base64img);
 });
 
-var Users = [
-  {
-    username: "admin",
-    password: "admin"
-  }
-];
-
-var books = [
-  { BookID: "1", Title: "Book 1", Author: "Author 1" },
-  { BookID: "2", Title: "Book 2", Author: "Author 2" },
-  { BookID: "3", Title: "Book 3", Author: "Author 3" }
-];
-
 app.post("/signup", function(req, res) {
   console.log("Inside Signup POST");
   console.log("Request Body: ", req.body);
@@ -357,7 +344,7 @@ app.post("/search", function(req, res) {
 
   const searchCourses = req.body;
 
-  if (req.session.user.role) {
+  if (req.session.user) {
     pool.getConnection(function(err, conn) {
       if (err) {
         console.log("Error in creating connection!");
@@ -435,7 +422,10 @@ app.get("/registration", function(req, res) {
         } else if (req.session.user.role === "faculty") {
           sql =
             "SELECT * from registration where courses_instructor = " +
-            mysql.escape(req.session.user.FName + " " + req.session.user.LName);
+            mysql.escape(
+              req.session.user.FName + " " + req.session.user.LName
+            ) +
+            "group by courses_courseID;";
         }
 
         console.log("sql:", sql);
@@ -464,7 +454,7 @@ app.get("/registrationAll", function(req, res) {
   console.log("Inside GET All Registration ");
   console.log("Request Body:", req.body);
 
-  if (req.session.user) {
+  if (true) {
     pool.getConnection(function(err, conn) {
       if (err) {
         console.log("Error in creating connection!", err);
@@ -499,13 +489,87 @@ app.get("/registrationAll", function(req, res) {
   }
 });
 
-//Route to get All Books when user visits the Home Page
+app.get("/courses", function(req, res) {
+  console.log("Inside GET All courses ");
+  console.log("Request Body:", req.body);
+
+  if (req.session.user) {
+    pool.getConnection(function(err, conn) {
+      if (err) {
+        console.log("Error in creating connection!", err);
+        res.writeHead(400, {
+          "Content-type": "text/plain"
+        });
+        res.end("Error in creating connection!");
+      } else {
+        var sql =
+          "select * from courses where instructor=" +
+          mysql.escape(req.session.user.FName + " " + req.session.user.LName) +
+          ";";
+        console.log("sql:", sql);
+        conn.query(sql, function(err, result) {
+          if (err) {
+            console.log("Error in retrieving courses ALL data", err);
+            res.writeHead(400, {
+              "Content-type": "text/plain"
+            });
+            res.end("Error in retrieving courses All data");
+          } else {
+            console.log("courses ALL jason Data: ", JSON.stringify(result));
+
+            res.writeHead(200, {
+              "Content-type": "application/json"
+            });
+            res.end(JSON.stringify(result));
+          }
+        });
+      }
+    });
+  }
+});
+
+app.get("/user", function(req, res) {
+  console.log("Inside GET All Registration ");
+  console.log("Request Body:", req.body);
+
+  if (req.session.user) {
+    pool.getConnection(function(err, conn) {
+      if (err) {
+        console.log("Error in creating connection!", err);
+        res.writeHead(400, {
+          "Content-type": "text/plain"
+        });
+        res.end("Error in creating connection!");
+      } else {
+        var sql = "select * from user;";
+        console.log("sql:", sql);
+        conn.query(sql, function(err, result) {
+          if (err) {
+            console.log("Error in retrieving user ALL data", err);
+            res.writeHead(400, {
+              "Content-type": "text/plain"
+            });
+            res.end("Error in retrieving user All data");
+          } else {
+            console.log("user ALL jason Data: ", JSON.stringify(result));
+
+            res.writeHead(200, {
+              "Content-type": "application/json"
+            });
+            res.end(JSON.stringify(result));
+          }
+        });
+      }
+    });
+  }
+});
+
 app.get("/home", (req, res) => {
   console.log("Inside Home Login");
   res.writeHead(200, {
     "Content-Type": "application/json"
   });
-  res.end(JSON.stringify(books));
+  res.end("inside Home");
 });
 
 app.post("/create", (req, res) => {
@@ -708,18 +772,82 @@ app.post("/dropCourse", function(req, res) {
   }
 });
 
-app.post("/delete", (req, res) => {
-  console.log("Inside delete");
-  const deleteID = req.body.BookID;
-  console.log(deleteID);
+app.post("/announcement", function(req, res) {
+  console.log("Inside Post announcement");
+  console.log("Request Body: ", req.body);
 
-  books = books.filter(b => b.BookID !== deleteID);
+  if (req.session.user.role === "faculty") {
+    pool.getConnection(function(err, conn) {
+      if (err) {
+        console.log("Error in creating connection!");
+        res.writeHead(400, {
+          "Content-type": "text/plain"
+        });
+        res.end("Error in creating connection!");
+      } else {
+        var sql =
+          "insert into announcement(topic,body,courses_courseID,courses_instructor) values(" +
+          mysql.escape(req.body.topic) +
+          "," +
+          mysql.escape(req.body.body) +
+          "," +
+          mysql.escape(req.body.courseID) +
+          "," +
+          mysql.escape(req.session.user.FName + " " + req.session.user.LName) +
+          ");";
 
-  res.writeHead(200, {
-    "Content-Type": "application/json"
-  });
-  console.log("Books : ", JSON.stringify(books));
-  res.end(JSON.stringify(books));
+        conn.query(sql, function(err, result) {
+          if (err) {
+            console.log("Error in inserting announcement");
+            res.writeHead(400, {
+              "Content-type": "text/plain"
+            });
+            res.end("Error ");
+          } else {
+            console.log("Announcement update complete!");
+            res.writeHead(200, {
+              "Content-type": "text/plain"
+            });
+            res.end("Announcement update complete!");
+          }
+        });
+      }
+    });
+  }
+});
+
+app.get("/announcement", function(req, res) {
+  console.log("Inside GET All announcements ");
+  console.log("Request Body:", req.body);
+
+  if (req.session.user) {
+    pool.getConnection(function(err, conn) {
+      if (err) {
+        console.log("Error in creating connection!", err);
+        res.writeHead(400, {
+          "Content-type": "text/plain"
+        });
+        res.end("Error in creating connection!");
+      } else {
+        var sql = "select * from announcement;";
+        console.log("sql:", sql);
+        conn.query(sql, function(err, result) {
+          if (err) {
+            console.log("Error in retrieving announcement data", err);
+            res.writeHead(400, {
+              "Content-type": "text/plain"
+            });
+            res.end("Error in retrieving announcement data");
+          } else {
+            res.writeHead(200, {
+              "Content-type": "application/json"
+            });
+            res.end(JSON.stringify(result));
+          }
+        });
+      }
+    });
+  }
 });
 
 //start your server on port 3001
