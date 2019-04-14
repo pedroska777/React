@@ -19,8 +19,8 @@ class Search extends Component {
       redirectError: false,
       subSearch: [],
       startIndex: 0,
-      currentPage: 1,
-      pagesPerPage: 3
+      pagesPerPage: 3,
+      currentPage: 1
     };
   }
 
