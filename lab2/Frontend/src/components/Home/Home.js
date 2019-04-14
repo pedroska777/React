@@ -4,6 +4,9 @@ import axios from "axios";
 import cookie from "react-cookies";
 import { Redirect } from "react-router";
 import { Link } from "react-router-dom";
+import Draggable, { DraggableCore } from "react-draggable"; // Both at the same time
+import Course from "../Course/course";
+
 //import Card from "react-bootstrap/Card";
 import {
   Card,
@@ -14,8 +17,6 @@ import {
   CardSubtitle,
   Button
 } from "reactstrap";
-
-import Course from "../Course/course";
 
 class Home extends Component {
   constructor(props) {
@@ -30,6 +31,64 @@ class Home extends Component {
       position: ""
     };
   }
+
+  getInitialState = () => {
+    return {
+      activeDrags: 0,
+      deltaPosition: {
+        x: 0,
+        y: 0
+      },
+      controlledPosition: {
+        x: -400,
+        y: 200
+      }
+    };
+  };
+
+  handleDrag = (e, ui) => {
+    const { x, y } = this.state.deltaPosition;
+    this.setState({
+      deltaPosition: {
+        x: x + ui.deltaX,
+        y: y + ui.deltaY
+      }
+    });
+  };
+
+  onStart = () => {
+    this.setState({ activeDrags: ++this.state.activeDrags });
+  };
+
+  onStop = () => {
+    this.setState({ activeDrags: --this.state.activeDrags });
+  };
+
+  // For controlled component
+  adjustXPos = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { x, y } = this.state.controlledPosition;
+    this.setState({ controlledPosition: { x: x - 10, y } });
+  };
+
+  adjustYPos = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { controlledPosition } = this.state;
+    const { x, y } = controlledPosition;
+    this.setState({ controlledPosition: { x, y: y - 10 } });
+  };
+
+  onControlledDrag = (e, position) => {
+    const { x, y } = position;
+    this.setState({ controlledPosition: { x, y } });
+  };
+
+  onControlledDragStop = (e, position) => {
+    this.onControlledDrag(e, position);
+    this.onStop();
+  };
 
   componentDidMount() {
     if (cookie.load("Role") === "student") {
@@ -65,6 +124,8 @@ class Home extends Component {
   };
 
   render() {
+    const dragHandlers = { onStart: this.onStart, onStop: this.onStop };
+    const { deltaPosition, controlledPosition } = this.state;
     var courseAns = [];
     let courseID = "";
     let instructor = "";
@@ -99,22 +160,17 @@ class Home extends Component {
         console.log("waitlisted true");
 
         courseList = (
-          <Card>
-            <CardImg
-              top
-              width="50%"
-              src="https://s18670.pcdn.co/wp-content/uploads/cool-math-games.jpeg"
-              alt="Card image cap"
-            />
-            <CardBody>
-              <CardTitle>{courseID}</CardTitle>
-              <CardSubtitle>{instructor}</CardSubtitle>
-              <CardText>the course is</CardText>
-              <Button>{button}</Button>
-              <Button>MOVe UP</Button>
-              <Button>MOVe Down</Button>
-            </CardBody>
-          </Card>
+          <Draggable {...dragHandlers}>
+            <Card>
+              <CardImg top width="50%" src="" alt="Card image cap" />
+              <CardBody>
+                <CardTitle>{courseID}</CardTitle>
+                <CardSubtitle>{instructor}</CardSubtitle>
+                <CardText>the course is</CardText>
+                <Button>{button}</Button>
+              </CardBody>
+            </Card>
+          </Draggable>
         );
       } else {
         courseList = null;
@@ -137,22 +193,7 @@ class Home extends Component {
       <div>
         {redirectVar}
 
-        <div class="container">
-          <h2>List of courses</h2>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Course ID</th>
-                <th>Instructor</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {/*Display the Tbale row based on data recieved*/}
-              {courseAns}
-            </tbody>
-          </table>
-        </div>
+        {courseAns}
       </div>
     );
   }
